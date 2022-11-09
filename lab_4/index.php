@@ -1,72 +1,63 @@
 <?php
 
-spl_autoload_register(function ($class_full_name) {
-    include $class_full_name . '.php';
+include 'DBConnect.php';
+
+spl_autoload_register(function ($class_name) {
+    include $class_name . '.php';
 });
+
+$peoplesRepository = new Repository($dbh);
 
 if (!isset($_SESSION)) {
     session_start();
-}
-
-if (empty($_SESSION['Peoples'])) {
-    $_SESSION['Peoples'] = new PeoplesCollection();
-    $_SESSION['Peoples']->defaultPeoples();
 }
 
 $actionToDo = $_POST['action'];
 
 if ($actionToDo == 'add') {
     if (People::validationDataPeoples($_POST)) {
-        $_SESSION['Peoples']->addPeople(
-            new People(5, $_POST)
-        );
+        $peoplesRepository->createPeople($_POST);
     }
 } elseif ($actionToDo == 'edit') {
     if (People::validationDataPeoples($_POST)) {
-        $_SESSION['Peoples']->editPeople(
-            $_POST
-        );
+        $peoplesRepository->updatePeople($_POST);
     }
-} elseif ($actionToDo == 'filter') {
-    echo $_SESSION['Peoples']->displayFilteredPeoples($_POST['born']);
-} elseif ($actionToDo == 'save') {
-    $_SESSION['Peoples']->savePeoples();
-} elseif ($actionToDo == 'load') {
-    $_SESSION['Peoples']->loadPeoples();
+} elseif ($actionToDo == 'delete') {
+    $peoplesRepository->deletePeople($_POST);
 }
 
-echo $_SESSION['Peoples']->displayPeoples();
+echo Display::displayPeoples($peoplesRepository->readPeoples())
 ?>
 <br>
 
 <button onclick="ShowAddForm()"> Add</button>
 <button onclick="ShowEditForm()"> Edit</button>
-<button onclick="ShowFilterForm()"> Filter</button>
+<button onclick="ShowDeleteForm()"> Delete</button>
 
 <br>
 
 <form action='<?= $_SERVER['PHP_SELF'] ?>' method='post' id='addForm'>
     Add <br>
     <label> full_name:
-        <input type='text' name='full_name'>
+        <input type='text' full_name='full_name'>
     </label><br>
     <label> sex:
         <input type='text' name='sex'>
     </label><br>
     <label> born:
-        <input type='number' name='born'>
+        <input type='number' born='born'>
     </label><br>
     <label> education:
-        <input type='text' name='education'>
+        <input type='text' education='education'>
     </label><br>
     <label> speciality:
-        <input type='text' name='speciality'>
+        <input type='text' speciality='speciality'>
     </label><br>
     <label> date_of_registration:
-        <input type='text' name='date_of_registration'>
+        <input type='text' date_of_registration='date_of_registration'>
     </label><br>
     <input type='hidden' name='action' value='add'>
-    <input type='submit'>
+    <input type='submit' value='add'>
 </form>
 
 <br>
@@ -77,50 +68,39 @@ echo $_SESSION['Peoples']->displayPeoples();
         <input type='number' name='id'>
     </label><br>
     <label> full_name:
-        <input type='text' name='full_name'>
+        <input type='text' full_name='full_name'>
     </label><br>
     <label> sex:
         <input type='text' name='sex'>
     </label><br>
     <label> born:
-        <input type='number' name='born'>
+        <input type='number' born='born'>
     </label><br>
     <label> education:
-        <input type='text' name='education'>
+        <input type='text' education='education'>
     </label><br>
     <label> speciality:
-        <input type='text' name='speciality'>
+        <input type='text' speciality='speciality'>
     </label><br>
     <label> date_of_registration:
-        <input type='text' name='date_of_registration'>
+        <input type='text' date_of_registration='date_of_registration'>
     </label><br>
     <input type='hidden' name='action' value='edit'>
-    <input type='submit'>
+    <input type='submit' value='edit'>
 </form>
 
 <br>
 
-<form action='<?= $_SERVER['PHP_SELF'] ?>' method='post' id='filterForm'>
-    Filter <br>
-    <label> full_name:
-        <input type='text' name='full_name'>
+<form action='<?= $_SERVER['PHP_SELF'] ?>' method='post' id='deleteForm'>
+    Delete <br>
+    <label> id:
+        <input type='number' name='id'>
     </label><br>
-    <label> born:
-        <input type='number' name='born'>
-    </label><br>
-    <input type='hidden' name='action' value='filter'>
-    <input type='submit'>
+    <input type='hidden' name='action' value='delete'>
+    <input type='submit' value='delete'>
 </form>
 
-<form action='<?= $_SERVER['PHP_SELF'] ?>' method='post' id='save'>
-    <input type='hidden' name='action' value='save'>
-    <input type='submit' value='Save to file'>
-</form>
-
-<form action='<?= $_SERVER['PHP_SELF'] ?>' method='post' id='load'>
-    <input type='hidden' name='action' value='load'>
-    <input type='submit' value='Upload from file'>
-</form>
+<br>
 
 <style>
     #addForm {
@@ -132,6 +112,10 @@ echo $_SESSION['Peoples']->displayPeoples();
     }
 
     #filterForm {
+        display: none;
+    }
+
+    #deleteForm {
         display: none;
     }
 
@@ -158,7 +142,8 @@ echo $_SESSION['Peoples']->displayPeoples();
         document.querySelector('#editForm').style.display = 'inline';
     }
 
-    function ShowFilterForm() {
-        document.querySelector('#filterForm').style.display = 'inline';
+    function ShowDeleteForm() {
+        document.querySelector('#deleteForm').style.display = 'inline';
     }
+
 </script>
